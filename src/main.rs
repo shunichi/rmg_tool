@@ -3,6 +3,7 @@ extern crate postgres;
 extern crate regex;
 extern crate users;
 extern crate itertools;
+extern crate indexmap;
 extern crate rmg_tool;
 
 use std::process::Command;
@@ -44,7 +45,7 @@ fn schema_migrations<T: std::iter::FromIterator<String>>() -> T {
     let db_name = database_name();
     let url = format!("postgres://{}@localhost:{}/{}", current_user_name(), POSTGRES_PORT, db_name);
     let conn = Connection::connect(url, TlsMode::None).unwrap();
-    conn.query("SELECT version FROM schema_migrations", &[]).unwrap().into_iter()
+    conn.query("SELECT version FROM schema_migrations ORDER BY version", &[]).unwrap().into_iter()
         .map(|row| row.get::<usize, String>(0))
         .collect()
 }
@@ -110,9 +111,32 @@ fn migrate_down_multi(u: &[&str]) {
 
 
 fn command_status() {
-    let ms = migration::migration_files();
-    for m in ms {
-        println!("{}", m.version);
+    let mut fms = migration::migration_files();
+    let sms: Vec<_> = schema_migrations();
+    for version in &sms {
+        let mut new_m: Option<migration::Migration> = None;
+        match fms.get_mut(version) {
+            Some(m) => {
+                m.status = migration::MigrationStatus::Up;
+            },
+            None => {
+                new_m = Some(migration::Migration {
+                    status: migration::MigrationStatus::Up,
+                    version: version.clone(),
+                    description: "********** NO FILE **********".to_owned(),
+                });
+            },
+        }
+        if let Some(m) = new_m { 
+            fms.insert(
+                m.version.clone(),
+                m,
+            );
+        }
+    }
+    fms.sort_keys();
+    for m in fms.values() {
+        println!(" {}    {}  {}", m.status.as_str(), m.version, m.description);
     }
 }
 
