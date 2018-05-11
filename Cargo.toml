@@ -1,0 +1,12 @@
+[package]
+name = "rmg_tool"
+version = "0.1.0"
+authors = ["Shunichi Ikegami <sike.tm@gmail.com>"]
+
+[dependencies]
+yaml-rust = "0.4.0"
+postgres = "0.15.2"
+regex = "1.0.0"
+users = "0.6.1"
+clap = "2.31.2"
+itertools = "0.7.8"
