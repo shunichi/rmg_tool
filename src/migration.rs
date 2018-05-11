@@ -1,6 +1,6 @@
 use std;
 use std::fs;
-use indexmap::IndexMap;
+use std::collections::HashMap;
 use regex::Regex;
 
 pub enum MigrationStatus {
@@ -62,7 +62,7 @@ fn to_capitalized_human_string(s: &str) -> String {
     capitalize(&s.replace('_', " "))
 }
 
-pub fn migration_files() -> IndexMap<String, Migration> {
+pub fn migration_files() -> HashMap<String, Migration> {
     let entries = fs::read_dir("./db/migrate").unwrap();
     entries.filter_map( |r| 
         r.ok()

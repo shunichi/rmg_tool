@@ -3,7 +3,6 @@ extern crate postgres;
 extern crate regex;
 extern crate users;
 extern crate itertools;
-extern crate indexmap;
 extern crate rmg_tool;
 
 use std::process::Command;
@@ -134,8 +133,10 @@ fn command_status() {
             );
         }
     }
-    fms.sort_keys();
-    for m in fms.values() {
+    let mut keys = fms.keys().collect::<Vec<_>>();
+    keys.sort();
+    for k in keys {
+        let m = &fms[k];
         println!(" {}    {}  {}", m.status.as_str(), m.version, m.description);
     }
 }
