@@ -3,7 +3,7 @@ extern crate postgres;
 extern crate regex;
 extern crate users;
 extern crate itertools;
-extern crate rmg_tool;
+extern crate rmg;
 
 use std::process::Command;
 use yaml_rust::YamlLoader;
@@ -14,8 +14,8 @@ use regex::Regex;
 use std::collections::{HashSet, HashMap};
 use users::{get_user_by_uid, get_current_uid};
 use itertools::Itertools;
-use rmg_tool::cli;
-use rmg_tool::migration;
+use rmg::cli;
+use rmg::migration;
 
 fn current_user_name() -> String {
     let user = get_user_by_uid(get_current_uid()).unwrap();
