@@ -95,19 +95,35 @@ fn reverse_join(v: &[&str]) -> String {
     v.iter().rev().join(",")
 }
 
-fn migrate_down_multi(u: &[&str]) {
+fn migrate_down_multi(u: &[&str]) -> bool {
     if u.is_empty() {
-        return;
+        return true;
     }
     let versions = reverse_join(u);
     let versions_arg = format!("VERSIONS={}", versions);
     println!("bundle exec rake migration:down_multiple {}", versions_arg);
-    Command::new("bundle")
+    let status = Command::new("bundle")
         .args(&["exec", "rake", "migration:down_multiple", &versions_arg])
         .status()
         .expect("rake db:migrate:down failed");
+    status.success()
 }
 
+fn checkout_schema() {
+    println!("git checkout db/schema.rb");
+    Command::new("git")
+        .args(&["checkout", "db/schema.rb"])
+        .status()
+        .expect("git checkout db/schema.rb failed");
+}
+
+fn checkout_branch(branch: &str) {
+    println!("git checkout {}", branch);
+    Command::new("git")
+        .args(&["checkout", branch])
+        .status()
+        .expect("git checkout db/schema.rb failed");
+}
 
 fn command_status() {
     let mut fms = migration::migration_files();
@@ -141,13 +157,22 @@ fn command_status() {
     }
 }
 
-fn command_down(branch: &str) {
+fn command_down(branch: &str, no_switch: bool) {
     let s: HashSet<_> = schema_migrations();
     let d = migration_diff(branch);
     let dkeys: HashSet<String> = d.keys().cloned().collect();
     let mut u: Vec<&str> = s.intersection(&dkeys).map(|v| v.as_str()).collect();
     u.sort();
-    migrate_down_multi(&u);
+    if !u.is_empty() {
+        if migrate_down_multi(&u) {
+            checkout_schema();
+        } else {
+            return;
+        }
+    }
+    if !no_switch {
+        checkout_branch(branch);
+    }
 }
 
 fn command_diff(branch: &str) {
@@ -169,8 +194,8 @@ fn main() {
         cli::Command::Diff => {
             command_diff(&options.branch.unwrap());
         },
-        cli::Command::Down => {
-            command_down(&options.branch.unwrap());
+        cli::Command::Down { no_switch } => {
+            command_down(&options.branch.unwrap(), no_switch);
         },
         _ => {},
     }
