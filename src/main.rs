@@ -19,7 +19,7 @@ use rmg_tool::migration;
 
 fn current_user_name() -> String {
     let user = get_user_by_uid(get_current_uid()).unwrap();
-    user.name().to_string()
+    user.name().to_str().unwrap().to_owned()
 }
 
 fn database_name() -> String {
@@ -60,7 +60,7 @@ fn migration_diff(branch_name: &str) -> HashMap<String,String> {
         let output = String::from_utf8_lossy(&output.stdout);
         let versions = output
             .lines()
-            .filter_map(|l| 
+            .filter_map(|l|
                 re.captures(l)
                     .map(|c| (c.get(1).unwrap().as_str().to_string(), to_human_string(c.get(2).unwrap().as_str()) ))
             );
@@ -126,7 +126,7 @@ fn command_status() {
                 });
             },
         }
-        if let Some(m) = new_m { 
+        if let Some(m) = new_m {
             fms.insert(
                 m.version.clone(),
                 m,
