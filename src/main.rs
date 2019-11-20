@@ -197,7 +197,9 @@ fn main() {
         cli::Command::Down { no_switch } => {
             command_down(&options.branch.unwrap(), no_switch);
         },
-        _ => {},
+        _ => {
+            command_status();
+        },
     }
 }
 
